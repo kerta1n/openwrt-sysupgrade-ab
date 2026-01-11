@@ -1,9 +1,10 @@
 #!/bin/sh
 
 # Override here if auto detect doesn't work
-BOOT_DEV=""
-ROOTA_DEV=""
-ROOTB_DEV=""
+BOOT_DEV="" # typically /dev/sda1
+ROOTA_DEV="" # typically /dev/sda2
+ROOTB_DEV="" # typically /dev/sda3
+BOOT_PATH="" # typically /boot/boot
 
 # Default image name strings (no spaces please)
 LABEL_IMAGEA="A"
@@ -183,7 +184,7 @@ echo "Restoring backup..."
 zcat openwrt-backup.tar.gz | tar x -C /mnt/sysupgrade || exit 1
 
 echo "Generating grub.cfg..."
-cp /boot/grub/grub.cfg /boot/grub/grub.cfg.bak
+cp ${BOOT_PATH}/grub/grub.cfg ${BOOT_PATH}/grub/grub.cfg.bak
 
 release=$(grep OPENWRT_RELEASE /mnt/sysupgrade/etc/os-release | cut -d'"' -f2)
 #partuuid=$(blkid -s PARTUUID -o value $TARGET_DEV)
@@ -195,15 +196,15 @@ a_partid=${ROOT_LABEL} #$(echo $ROOT_DEV | egrep -o '[0-9]+')
 a_partdev=$ROOT_DEV
 
 echo "Copying kernel..."
-cp $KERNEL /boot/vmlinuz-$partid || exit 1
+cp $KERNEL ${BOOT_PATH}/vmlinuz-$partid || exit 1
 touch /mnt/sysupgrade/.image-${partid}
 
-if [ "${MIGRATION}" == "yes" ] && [ ! -f "/boot/vmlinuz-${a_partid}" ] && [ -f "/boot/vmlinuz" ] ; then
+if [ "${MIGRATION}" == "yes" ] && [ ! -f "${BOOT_PATH}/vmlinuz-${a_partid}" ] && [ -f "${BOOT_PATH}/vmlinuz" ] ; then
     # Migrate from openwrt named kernel to rootfs_a kernel
-    mv /boot/vmlinuz /boot/vmlinuz-${a_partid} || exit 1
+    mv ${BOOT_PATH}/vmlinuz ${BOOT_PATH}/vmlinuz-${a_partid} || exit 1
 fi
 
-cat <<EOF > /boot/grub/grub.cfg
+cat <<EOF > ${BOOT_PATH}/grub/grub.cfg
 serial --unit=0 --speed=115200 --word=8 --parity=no --stop=1 --rtscts=off
 terminal_input console serial; terminal_output console serial
 
@@ -212,16 +213,16 @@ set timeout="5"
 search -l kernel -s root
 
 menuentry "$release $partid" {
-	linux /boot/vmlinuz-$partid root=$partdev rootwait  console=tty0 console=ttyS0,115200n8 noinitrd
+        linux /boot/vmlinuz-$partid root=$partdev rootwait  console=tty0 console=ttyS0,115200n8 noinitrd
 }
 menuentry "$release $partid (failsafe)" {
-	linux /boot/vmlinuz-$partid failsafe=true root=$partdev rootwait  console=tty0 console=ttyS0,115200n8 noinitrd
+        linux /boot/vmlinuz-$partid failsafe=true root=$partdev rootwait  console=tty0 console=ttyS0,115200n8 noinitrd
 }
 menuentry "$a_release $a_partid" {
-	linux /boot/vmlinuz-$a_partid root=$a_partdev rootwait  console=tty0 console=ttyS0,115200n8 noinitrd
+        linux /boot/vmlinuz-$a_partid root=$a_partdev rootwait  console=tty0 console=ttyS0,115200n8 noinitrd
 }
 menuentry "$a_release $a_partid (failsafe)" {
-	linux /boot/vmlinuz-$a_partid failsafe=true root=$a_partdev rootwait  console=tty0 console=ttyS0,115200n8 noinitrd
+        linux /boot/vmlinuz-$a_partid failsafe=true root=$a_partdev rootwait  console=tty0 console=ttyS0,115200n8 noinitrd
 }
 EOF
 
