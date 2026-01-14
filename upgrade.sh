@@ -4,7 +4,7 @@
 BOOT_DEV="" # typically /dev/sda1
 ROOTA_DEV="" # typically /dev/sda2
 ROOTB_DEV="" # typically /dev/sda3
-BOOT_PATH="" # typically /boot/boot
+BOOT_PATH="" # typically /boot/boot if you flashed the "ext4-combined-..." image, otherwise /boot
 
 # Default image name strings (no spaces please)
 LABEL_IMAGEA="A"
@@ -116,6 +116,12 @@ else
     exit 1
 fi
 
+
+if [ -z "${BOOT_PATH}" ]; then
+    echo "unable to detect init kernels and/or grub. Update this script's variables."
+    exit 1
+fi
+
 # Get Root Volume
 #ROOT_DEV=$(findmnt -n -o SOURCE /)
 
@@ -162,13 +168,22 @@ if ! ([ $answer == Y ] || [ $answer == y ]); then
     exit 1
 fi
 
+echo "Moving /etc/banner file to update upon next post-update shell login..."
+mv /etc/banner /etc/banner.bak.$(date +%m-%d)
+if [ $? != 0 ]; then
+    echo "Couldn't move banner file! Something may be wrong with the FS, exiting!"
+    exit 1
+fi
+echo "Banner file moved."
+
 # Do a backup
+echo "Current directory: $PWD"
 sysupgrade -b openwrt-backup.tar.gz
 if [ $? != 0 ]; then
     echo "sysupgrade backup failed! Abort!"
     exit 1
 fi
-
+echo "Sysupgrade backup saved to current directory, will be overwritten next time you update with this script!"
 
 echo "Formatting $TARGET_DEV..."
 mkfs.ext4 -q -L ${TARGET_FS_LABEL} -b 4096 -m 0 ${TARGET_DEV}
@@ -180,7 +195,7 @@ mount $TARGET_DEV /mnt/sysupgrade || exit 1
 echo "Extracting rootfs..."
 zcat $ROOTFS | tar x -C /mnt/sysupgrade || exit 1
 
-echo "Restoring backup..."
+echo "Restoring configs into updated partition..."
 zcat openwrt-backup.tar.gz | tar x -C /mnt/sysupgrade || exit 1
 
 echo "Generating grub.cfg..."
