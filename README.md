@@ -33,6 +33,11 @@ Both root images have their kernels on the same boot partition. They are named
 with the A/B label as a suffix. The layout above would have
 `/boot/vmlinuz-A` and `/boot/vmlinuz-B` for the two rootfs's kernels.
 
+> [!CAUTION]
+> Be aware that you may run out of space with this script, as it stores 3 separate
+> kernel images inside of the tiny 16MB /boot partition, and will have to follow the resize
+> instructions at the very bottom of this guide.
+
 ### High Level Process
 1. Detect all required partitions
 1. Identify the non-active root partition
@@ -213,3 +218,92 @@ root@OpenWrt:~#
   The first is simply checking the running kernel command line, or check
   for a `.image-*` file in the root. This script creates that, so until
   you boot a root this script has written, it wouldn't be present.
+
+* Q: I got the `no space left on device` error when running the script, what do I do now?
+
+  A: This typically indicates your `/boot` partition is not large enough, as mentioned
+  in the warning.
+  ### Fix:
+  These steps assume the following for your boot drive:
+   1. Partition 1 (/boot) is still 16MiB fat16
+   2. Partition 2 is ext4, and you manually expanded it past the default 104MiB
+      size (to something like 8GiB, using the steps listed earlier in the guide)
+   3. Partition 3 is also ext4, is identical in size to P2, and exists to be used
+      as the "B" slot
+   4. Partition 4 is where other data for programs like Docker, etc is stored
+      (again, WON'T be used by the upgrade script), or you have a completely
+      separate block device (which is automounted)
+   6. You have at least 2GiB of freespace remaning on the boot disk after
+      configuring this scheme
+  
+  You will need to do the following:
+   1. Obtain a liveCD of GParted, and boot your system into it. (PXE booting
+      won't work, since your router isn't going to be booted into OpenWRT.)
+   2. Identify the correct storage device that you flashed OpenWRT onto.
+   3. Open a terminal, and backup the /boot partition using `cp`:
+    
+      ```
+      sudo mkdir -p /mnt/bootpart
+      mkdir -p /tmp/boot-bak 
+      sudo mount -t vfat /dev/sda1 /mnt/bootpart
+      sudo cp -va /mnt/bootpart/* /tmp/boot-bak
+      umount /mnt/bootpart
+      ```
+   
+   4. Switch back to (or reopen) GParted, and do the following for partition 4
+      (you may not have one, so you can move to 3):
+      Right-click the partition, then click the "Resize/Move" button.
+      Drag the partition to the right 
+   5. PRINT your current partition table first:
+      `sudo fdisk -l /dev/sda`
+   
+      > [!CAUTION]
+      >  This will WIPE the /boot partition completely. BACK UP THE FILES!
+      >  You will ALSO need to pay attention to the partition type and sector numbers
+      >  when formatting.
+      >
+      >  If your starting sector number for partition 1 is 1024 or 2048, ensure to use
+      >  THAT number, rather than 512. If you skip this, you WILL brick your GRUB.
+      > 
+      >  If you've already flashed that combined image like mentioned earlier, your disk
+      >  should automatically be formatted to GPT. If for some God-forsaken reason you
+      >  formatted your disk with MBR and somehow got OpenWRT to boot, you should consider
+      >  a different script.
+
+
+      ```
+      $ sudo fdisk /dev/sda
+   
+      d          # Delete partition
+      1          # Select partition 1
+      
+      n          # Create new partition
+      1          # Partition number 1
+      512        # Start sector: 512
+      +128M      # End: +128M
+      y          # Yes to wipe the existing FAT signature
+      
+      t          # Change partition type
+      1          # Select partition 1
+      11         # Microsoft basic data (for GPT)
+      
+      x          # Enter expert mode
+      A          # Set legacy BIOS bootable attribute
+      1          # Select partition 1
+      r          # Return to main menu
+      
+      p          # Print to verify everything looks correct
+      
+      w          # Write changes to disk
+      ```
+      
+   4. Format the disk, then inform the OS:
+      `sudo mkfs.vfat -F 32 -n kernel /dev/sda1`
+      `sudo partprobe /dev/sda`
+   5. Restore the contents of the /boot partition, and then use the GUI button to reboot:
+      ```
+      mount -t vfat /dev/sda1 /mnt/bootpart
+      cp -va /tmp/boot-bak/* /mnt/bootpart/
+      umount /mnt/bootpart
+      ```
+      
