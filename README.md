@@ -249,27 +249,53 @@ root@OpenWrt:~#
       sudo cp -va /mnt/bootpart/* /tmp/boot-bak
       umount /mnt/bootpart
       ```
-   
-   4. Switch back to (or reopen) GParted, and do the following for partition 4
-      (you may not have one, so you can move to 3):
-      Right-click the partition, then click the "Resize/Move" button.
-      Drag the partition to the right 
-   5. PRINT your current partition table first:
-      `sudo fdisk -l /dev/sda`
-   
-      > [!CAUTION]
-      >  This will WIPE the /boot partition completely. BACK UP THE FILES!
-      >  You will ALSO need to pay attention to the partition type and sector numbers
-      >  when formatting.
-      >
-      >  If your starting sector number for partition 1 is 1024 or 2048, ensure to use
-      >  THAT number, rather than 512. If you skip this, you WILL brick your GRUB.
-      > 
-      >  If you've already flashed that combined image like mentioned earlier, your disk
-      >  should automatically be formatted to GPT. If for some God-forsaken reason you
-      >  formatted your disk with MBR and somehow got OpenWRT to boot, you should consider
-      >  a different script.
+      ***
+      ⚠️⚠️⚠️ WARNING ⚠️⚠️⚠️
+      
+      If you are doing these steps on an existing install, BACK UP your active
+      partition using LuCI's "Generate Archive" button, and also use `rsync` to
+      copy all of the data in your userdata partition (partition 4) to another
+      physically attached disk or NAS (via RSYNC/SFTP).
 
+      ⚠️⚠️⚠️
+      ***
+
+   5. Switch back to (or reopen) GParted, and do the following for partition 4
+      (you may not have one, so you can do this with 3 instead):
+      Right-click the partition, then click the "Resize/Move" button.
+      Drag the partition to the right by a hair, then the size for "Before" and
+      "After" should change. Once they do, manually set the "Before" size to 112
+      MiB (which result in giving partition 1 a total of 128MiB to expand to.) The
+      after size should decrease, but not be zero, as we are just moving the
+      partition JUST a little bit MORE into the freespace.
+      
+      Repeat the same steps for partition 3 and 2, until GParted shows that Partition
+      1 is 16MiB, but has 112 (can sometimes calculate to 112.75) MiB of freespace
+      between it and partition 2.
+
+      Once this is confirmed, click the check (✔) at the top, DOUBLE-CHECK the changes,
+      and let it execute.
+      
+   6. PRINT your current partition table first:
+      `sudo fdisk -l /dev/sda`
+
+      ***
+      🚨🚨🚨 CAUTION 🚨🚨🚨
+      
+      This will WIPE the /boot partition completely. BACK UP THE FILES!
+      You will ALSO need to pay attention to the partition type and sector numbers
+      when formatting.
+      
+      If your starting sector number for partition 1 is 1024 or 2048, ensure to use
+      THAT number, rather than 512. If you skip this, you WILL brick your GRUB.
+      
+      If you've already flashed that combined image like mentioned earlier, your disk
+      should automatically be formatted to GPT. If for some God-forsaken reason you
+      formatted your disk with MBR and somehow got OpenWRT to boot, you should consider
+      a different script.
+
+      🚨🚨🚨
+      ***
 
       ```
       $ sudo fdisk /dev/sda
