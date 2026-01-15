@@ -249,16 +249,17 @@ root@OpenWrt:~#
       sudo cp -va /mnt/bootpart/* /tmp/boot-bak
       umount /mnt/bootpart
       ```
-      ***
+
       ⚠️⚠️⚠️ WARNING ⚠️⚠️⚠️
+      ***
       
       If you are doing these steps on an existing install, BACK UP your active
       partition using LuCI's "Generate Archive" button, and also use `rsync` to
       copy all of the data in your userdata partition (partition 4) to another
       physically attached disk or NAS (via RSYNC/SFTP).
 
-      ⚠️⚠️⚠️
       ***
+      ⚠️⚠️⚠️
 
    5. Switch back to (or reopen) GParted, and do the following for partition 4
       (you may not have one, so you can do this with 3 instead):
@@ -279,8 +280,9 @@ root@OpenWrt:~#
    6. PRINT your current partition table first:
       `sudo fdisk -l /dev/sda`
 
-      ***
+      
       🚨🚨🚨 CAUTION 🚨🚨🚨
+      ***
       
       This will WIPE the /boot partition completely. BACK UP THE FILES!
       You will ALSO need to pay attention to the partition type and sector numbers
@@ -294,8 +296,9 @@ root@OpenWrt:~#
       formatted your disk with MBR and somehow got OpenWRT to boot, you should consider
       a different script.
 
-      🚨🚨🚨
       ***
+      🚨🚨🚨
+      
 
       ```
       $ sudo fdisk /dev/sda
