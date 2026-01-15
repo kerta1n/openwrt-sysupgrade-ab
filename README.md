@@ -331,9 +331,10 @@ root@OpenWrt:~#
       
    4. Format the disk, then inform the OS:
    
-      `sudo mkfs.vfat -F 32 -n kernel /dev/sda1`
-      
-      `sudo partprobe /dev/sda`
+      ```
+      sudo mkfs.vfat -F 32 -n kernel /dev/sda1
+      sudo partprobe /dev/sda
+      ```
    6. Restore the contents of the /boot partition, and then use the GUI button to reboot:
       ```
       mount -t vfat /dev/sda1 /mnt/bootpart
