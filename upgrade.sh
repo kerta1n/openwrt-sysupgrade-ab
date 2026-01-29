@@ -218,11 +218,12 @@ echo "Copying kernel..."
 cp $KERNEL ${BOOT_PATH}/vmlinuz-$partid || exit 1
 touch /mnt/sysupgrade/.image-${partid}
 
-echo "(Last step) Modifying grub..."
 if [ "${MIGRATION}" == "yes" ] && [ ! -f "${BOOT_PATH}/vmlinuz-${a_partid}" ] && [ -f "${BOOT_PATH}/vmlinuz" ] ; then
     # Migrate from openwrt named kernel to rootfs_a kernel
     mv ${BOOT_PATH}/vmlinuz ${BOOT_PATH}/vmlinuz-${a_partid} || exit 1
 fi
+
+echo "(Last step) Modifying grub..."
 
 cat <<EOF > ${BOOT_PATH}/grub/grub.cfg
 serial --unit=0 --speed=115200 --word=8 --parity=no --stop=1 --rtscts=off
@@ -247,3 +248,4 @@ menuentry "$a_release $a_partid (failsafe)" {
 EOF
 
 umount /mnt/sysupgrade
+echo "Finished, make sure there were no errors"
