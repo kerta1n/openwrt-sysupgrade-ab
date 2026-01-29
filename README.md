@@ -3,6 +3,9 @@
 A/B upgrades allow for safer OpenWrt upgrades. If the upgrade does not go as
 planned, you can easily boot into your previous image.
 
+This approach is nearly identical to how Debian/Ubuntu systems on x86 work
+(e.g. updating your kernel image will trigger the OS to make a NEW grub boot entry).
+
 The A/B upgrade approach functions by having two root parititons. When
 executing an upgrade the new image will be written to the non-active root
 partition. The grub config is updated to allow booting into either image.
@@ -35,7 +38,7 @@ with the A/B label as a suffix. The layout above would have
 
 > [!CAUTION]
 > Be aware that you may run out of space with this script, as it stores 3 separate
-> kernel images inside of the tiny 16MB /boot partition, and will youhave to follow the resize
+> kernel images inside of the tiny 16MB /boot partition, and you will have to follow the resize
 > instructions at the very bottom of this guide.
 > 
 > NEVER use the OpenWRT documentation's script ([this one](https://openwrt.org/docs/guide-user/advanced/expand_root)) to resize your partitions
