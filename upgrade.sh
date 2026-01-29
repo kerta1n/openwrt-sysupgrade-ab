@@ -10,6 +10,9 @@ BOOT_PATH="" # typically /boot/boot if you flashed the "ext4-combined-..." image
 LABEL_IMAGEA="A"
 LABEL_IMAGEB="B"
 
+# MAINTAINERS MUST UPDATE THIS MANUALLY
+echo "OpenWRT A/B sysupgrade, version 2026.01.28"
+
 # Arguments
 if [ $# -eq 0 ]; then
     echo "Usage: $0 kernel rootfs"
@@ -160,7 +163,7 @@ echo "Kernel: $KERNEL"
 echo "Rootfs: $ROOTFS"
 
 # Time to be destructive
-echo -n "Continue? (y/n) "
+echo -n "Checks have been completed, continue? This will now make changes to your filesystem & disk. (y/n) "
 read answer
 
 if ! ([ $answer == Y ] || [ $answer == y ]); then
@@ -168,13 +171,14 @@ if ! ([ $answer == Y ] || [ $answer == y ]); then
     exit 1
 fi
 
-echo "Moving /etc/banner file to update upon next post-update shell login..."
-mv /etc/banner /etc/banner.bak.$(date +%m-%d)
+echo "Removing login banner..."
+##mv /etc/banner /etc/banner.bak.$(date +%m-%d)
+rm -f /etc/banner
 if [ $? != 0 ]; then
-    echo "Couldn't move banner file! Something may be wrong with the FS, exiting!"
+    echo "Couldn't remove banner file! Something may be wrong with the FS, exiting!"
     exit 1
 fi
-echo "Banner file moved."
+echo "Banner file removed."
 
 # Do a backup
 echo "Current directory: $PWD"
@@ -214,6 +218,7 @@ echo "Copying kernel..."
 cp $KERNEL ${BOOT_PATH}/vmlinuz-$partid || exit 1
 touch /mnt/sysupgrade/.image-${partid}
 
+echo "(Last step) Modifying grub..."
 if [ "${MIGRATION}" == "yes" ] && [ ! -f "${BOOT_PATH}/vmlinuz-${a_partid}" ] && [ -f "${BOOT_PATH}/vmlinuz" ] ; then
     # Migrate from openwrt named kernel to rootfs_a kernel
     mv ${BOOT_PATH}/vmlinuz ${BOOT_PATH}/vmlinuz-${a_partid} || exit 1
