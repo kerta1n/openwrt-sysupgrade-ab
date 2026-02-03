@@ -38,8 +38,8 @@ with the A/B label as a suffix. The layout above would have
 
 > [!CAUTION]
 > Be aware that you may run out of space with this script, as it stores 3 separate
-> kernel images inside of the tiny 16MB /boot partition, and you will have to follow the resize
-> instructions at the very bottom of this guide.
+> kernel images inside of the tiny 16MB /boot partition, and you will have to follow the
+> [resize instructions](https://github.com/kerta1n/openwrt-sysupgrade-ab?tab=readme-ov-file#fix) at the very bottom of this guide.
 > 
 > NEVER use the OpenWRT documentation's script ([this one](https://openwrt.org/docs/guide-user/advanced/expand_root)) to resize your partitions
 > if you decide to use A/B partitioning. It will render your drive unbootable!!
